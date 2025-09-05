@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Windows VTL2 Technical Exploration.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="windows-vtl2-technical-exploration">Windows VTL2 Technical Exploration</h1>
+<hr>
+<h2 id="1-preface">1. Preface</h2>
+<p>The Virtual Secure Mode (VSM) mechanism is a data protection and isolation technology in Windows, implemented through virtualization.</p>
+<p>In a previous article(<a href="https://research.qianxin.com/archives/2556">深入解析Windows VTL机制 &amp; IUM进程</a>)，we introduced the Windows VTL mechanism and the IUM process. Interested readers may revisit that content.</p>
+<p>Let’s briefly review the concept of VTL (Virtual Trust Levels). MSDN describes it as follows:</p>
+<pre class="hljs"><code><div>VSM achieves and maintains isolation through Virtual Trust Levels (VTLs). VTLs are enabled and managed on both a per-partition and per-virtual processor basis.
+
+Virtual Trust Levels are hierarchical, with higher levels being more privileged than lower levels. VTL0 is the least privileged level, with VTL1 being more privileged than VTL0, VTL2 being more privileged than VTL1, etc.
+
+Architecturally, up to 16 levels of VTLs are supported; however a hypervisor may choose to implement fewer than 16 VTL’s. Currently, only two VTLs are implemented.
+
+Each VTL has its own set of memory access protections. These access protections are managed by the hypervisor in a partition’s physical address space, and thus cannot be modified by system level software running in the partition.
+
+Since more privileged VTLs can enforce their own memory protections, higher VTLs can effectively protect areas of memory from lower VTLs. In practice, this allows a lower VTL to protect isolated memory regions by securing them with a higher VTL. For example, VTL0 could store a secret in VTL1, at which point only VTL1 could access it. Even if VTL0 is compromised, the secret would be safe.
+</div></code></pre>
+<p>According to Microsoft documentation, Windows currently supports up to two VTL levels—VTL0 and VTL1. These two levels were analyzed in detail in the earlier article and won’t be repeated here. Higher VTL levels are more secure, and lower VTLs cannot modify (or even access) the data of higher ones.</p>
+<p>But reality tells a different story.</p>
+<p>In fact, Microsoft has quietly added support for VTL2 and extensively deployed it in their commercial Azure cloud platform.</p>
+<hr>
+<h2 id="2-the-disappearing-vmsp-process">2. The Disappearing VMSP Process</h2>
+<p>It all began with an unexpected discovery.</p>
+<p>While creating a VM in Azure Local using an Azure Marketplace image, I selected <code>Security type</code> as <code>Trusted Launch virtual machines</code>, as shown below:</p>
+<p><img src="./1.png" alt="" title="Create VM"></p>
+<p>Both images I downloaded from the Azure Marketplace supported the <code>Trusted Launch</code> feature.</p>
+<p>Once the VM was created, I checked it from the Host. To my surprise, these <code>Trusted Launch</code> VMs did not start a VMSP process to support vTPM, as shown below:</p>
+<p><img src="./2.png" alt="" title="isolated VM"></p>
+<p>There was no VMSP process corresponding to the VMWP process (for those unfamiliar with VMSP, refer to the earlier article. In short, enabling vTPM normally spawns a VMSP process paired with the VMWP process).</p>
+<p>At first, I thought <code>Trusted Launch</code> VMs simply disabled vTPM by default. But I was wrong. Checking the VM’s security configuration confirmed that TPM was enabled:</p>
+<p><img src="./3.png" alt="" title="VM security options"></p>
+<p>And in Device Manager inside the VM, evidence of an active vTPM was present:</p>
+<p><img src="./4.png" alt="" title="VM device manager"></p>
+<p>As shown, the vTPM MMIO address starting at <code>0xfed40000</code> appeared, and the device was working normally.</p>
+<p>So the question arose: If vTPM is enabled and functional, then Hyper-V must have some executable or code providing this virtual TPM device. Based on prior Hyper-V research, we know that VMSP contains binaries to support vTPM, with a VMSP process launched at VM startup. But for <code>Trusted Launch</code> VMs, this doesn’t happen. There must be another binary (or set of binaries) providing equivalent functionality. The challenge: find where they are, when they load, and under what privileges they serve the VM.</p>
+<p>Normally, user-mode virtual devices are initialized through the VMWP process. But in <code>Trusted Launch</code> VMs, devices communicating via IO/MMIO virtualization—such as vTPM or power management devices—are not initialized. Let’s take the <code>PowerManagementDevice</code> as an example:</p>
+<pre class="hljs"><code><div>__int64 PowerManagementDevice::PowerOn(__int64 this, struct IVirtualDeviceRepository *a2, int a3)
+{
+//Code omitted
+  v35 = 0;
+  v5 = *(_QWORD *)(this + 248) &amp; -(__int64)(*(_QWORD *)(this + 248) != 0i64);
+  v6 = (*(__int64 (__fastcall **)(__int64, int *))(*(_QWORD *)v5 + 104i64))(v5, &amp;v35);// 
+                                                // vmwp!SecurityManager::IsHclEnabled
+  if ( v6 &lt; 0 )
+    wil::details::in1diag3::Throw_Hr(
+      retaddr,
+      (void *)0xBD,
+      (unsigned int)&quot;onecore\\vm\\dv\\chipset\\power\\powermanagementdevice.cpp&quot;,
+      (const char *)(unsigned int)v6,
+      v18);
+  v34 = 0;
+  v36 = 0;
+  v7 = *(_QWORD *)(this + 248) &amp; -(__int64)(*(_QWORD *)(this + 248) != 0i64);
+  v8 = (*(__int64 (__fastcall **)(__int64, int *, int *))(*(_QWORD *)v7 + 80i64))(v7, &amp;v34, &amp;v36);// 
+                                                // vmwp!SecurityManager::IsVmIsolated
+  if ( v8 &lt; 0 )
+    wil::details::in1diag3::Throw_Hr(
+      retaddr,
+      (void *)0xC2,
+      (unsigned int)&quot;onecore\\vm\\dv\\chipset\\power\\powermanagementdevice.cpp&quot;,
+      (const char *)(unsigned int)v8,
+      v18);
+  if ( v35 || !v36 )
+    return 0i64;
+//PowerManagementDevice initialization code omitted
+</div></code></pre>
+<p>Analysis shows: if HCL is enabled, or if <code>v36</code> is false, the function returns success to VMWP without actually initializing the device.</p>
+<p>Debugging confirmed this: when initializing a <code>Trusted Launch</code> VM, calling <code>vmwp!SecurityManager::IsHclEnabled</code> returns true (<code>v35 = 1</code>). Thus, device initialization code (like vTPM) is never executed by VMWP.</p>
+<p>That explains why VMSP never appears. But then, what provides the vTPM functionality? It seems a hidden “ghost” virtual device is quietly serving the VM.</p>
+<p>At this point, research hit a roadblock. We knew the effect, but not the cause. Perhaps the <code>IsHclEnabled</code> function is the key.</p>
+<hr>
+<h2 id="3-openhcl-and-igvm">3. OPENHCL and IGVM</h2>
+<p>Searching for Hyper-V, HCL, and VTL2 led directly to a Microsoft blog: (<a href="https://techcommunity.microsoft.com/blog/windowsosplatform/openhcl-the-new-open-source-paravisor/4273172">OpenHCL: the new, open source paravisor</a>). This article introduces OPENHCL’s functionality and architecture, including the architecture diagram below:</p>
+<p><img src="./5.png" alt="" title="openhcl"></p>
+<p>This diagram clarifies where VTL2 resides and its role. VTL2 runs inside the VM, unlike VTL1, which runs on the Host. For the VM, VTL2 looks like a shadow system running on virtual hardware, resembling a mini-hypervisor—but not nested virtualization. We’ll explore this further later. Importantly, the VM cannot perceive VTL2, and even if VTL1 (securekernel) is fully compromised, it cannot access or modify VTL2 data.</p>
+<p>The diagram also shows VTL2 (OPENHCL) having both user mode and kernel mode. In reality, Microsoft’s closed-source VTL2 integrates these into one large kernel binary, similar to securekernel.</p>
+<p>Take vTPM as an example: previously, device binaries were loaded by VMWP/VMSP. Now, they are moved into VTL2. Since VTL2 is transparent to the VM, the VM sees no difference between traditional and <code>Trusted Launch</code> virtualization. But on the Host side, <code>Trusted Launch</code> requires no Host processes to support vTPM.</p>
+<p>For example, years ago, I found multiple vTPM vulnerabilities. Suppose one allowed remote code execution. In traditional virtualization, attackers could exploit it to compromise the Host’s VMSP process. With <code>Trusted Launch</code>, exploitation only executes code in VTL2—inside the VM boundary. This reduces the attack surface for VM escapes. At worst, it breaks isolation from VTL0 → VTL2, not VM → Host.</p>
+<p>Additionally, for confidential computing scenarios (like TPM), VTL2’s isolation guarantees stronger data protection. The VM doesn’t know what it’s communicating with, and even with Ring0 access, it cannot reach VTL2’s physical memory.</p>
+<p>OPENVMM, an open-source project, is invaluable for understanding VTL2. But how is VTL2 implemented in real Windows systems?</p>
+<p>Through debugging, I identified a key binary: <code>vmfirmwarehcl.dll</code>.</p>
+<p><img src="./6.png" alt="" title="vmfirmwarehcl"></p>
+<p>As its name suggests, this DLL is tied to Windows’ VTL2 implementation. Opening it in IDA showed no code—it appeared to be a resource container. Checking its resources confirmed this:</p>
+<p><img src="./7.png" alt="" title="file resources"></p>
+<p>Inside was a resource named <code>VMFW</code>, whose magic number was <code>IGVM</code>. This points us to the <strong>Independent Guest Virtual Machine (IGVM)</strong> file format. IGVM files package everything needed to boot a VM across different stacks, supporting isolation tech like AMD SEV-SNP and Intel TDX. Conceptually, an IGVM is a command set that a loader interprets to build the VM’s initial state.</p>
+<p>In Windows VTL2, the IGVM loader extracts and processes the IGVM inside vmfirmwarehcl.dll, writes required data and binaries into the VM’s physical memory, and finalizes the startup.</p>
+<p>Microsoft’s open-source（<a href="https://github.com/microsoft/igvm">IGVM</a>）documents the format, and includes tools to dump IGVMs for analysis.</p>
+<p>Parsing vmfirmwarehcl.dll revealed five IGVMs. Their <code>IGVM_VHT_SUPPORTED_PLATFORM</code> fields included:</p>
+<pre class="hljs"><code><div>13510:
+IGVM_VHT_SUPPORTED_PLATFORM:
+  CompatibilityMask: 00000001
+  HighestVtl: 02
+  PlatformType: 01
+  PlatformVersion: 0001
+  SharedGPABoundary: 0
+
+13515:
+IGVM_VHT_SUPPORTED_PLATFORM:
+  CompatibilityMask: 00000001
+  HighestVtl: 02
+  PlatformType: 02
+  PlatformVersion: 0001
+  SharedGPABoundary: 400000000000
+
+13516:
+IGVM_VHT_SUPPORTED_PLATFORM:
+  CompatibilityMask: 00000001
+  HighestVtl: 00
+  PlatformType: 02
+  PlatformVersion: 0001
+  SharedGPABoundary: 400000000000
+
+13520:
+IGVM_VHT_SUPPORTED_PLATFORM:
+  CompatibilityMask: 00000001
+  HighestVtl: 02
+  PlatformType: 03
+  PlatformVersion: 0001
+  SharedGPABoundary: 800000000000
+
+13521:
+IGVM_VHT_SUPPORTED_PLATFORM:
+  CompatibilityMask: 00000001
+  HighestVtl: 00
+  PlatformType: 03
+  PlatformVersion: 0001
+  SharedGPABoundary: 800000000000
+</div></code></pre>
+<p>Here, the fields we are most concerned with are <code>HighestVtl</code> and <code>PlatformType</code>. The definition of the <code>PlatformType</code> field is as follows:</p>
+<pre class="hljs"><code><div>pub enum IgvmPlatformType {
+
+    /// Native platform type without isolation.
+
+    NATIVE = 0x00,
+
+    /// Platform type of Hyper-V's which supports VSM isolation.
+
+    VSM_ISOLATION = 0x01,
+
+    /// AMD SEV-SNP.
+
+    SEV_SNP = 0x02,
+
+    /// Intel TDX.
+
+    TDX = 0x03,
+
+    /// AMD SEV.
+
+    #[cfg(feature = &quot;unstable&quot;)]
+
+    #[cfg_attr(docsrs, doc(cfg(feature = &quot;unstable&quot;)))]
+
+    SEV = 0x04,
+
+    /// AMD SEV-ES
+
+    #[cfg(feature = &quot;unstable&quot;)]
+
+    #[cfg_attr(docsrs, doc(cfg(feature = &quot;unstable&quot;)))]
+
+    SEV_ES = 0x05,
+
+}
+</div></code></pre>
+<p>So, for the IGVM file at the VTL2 level, the <code>HighestVtl</code> field should be set to 2, and the <code>PlatformType</code> field should be <code>VSM_ISOLATION</code>. In this way, the file <code>13510</code> is identified.</p>
+<p>Inside the <code>13510</code> IGVM file, there is a complete PE file:</p>
+<pre class="hljs"><code><div>IGVM_VHT_PAGE_DATA:
+  GPA: 0000000001A00000
+  CompatibilityMask: 00000001
+  FileOffset: 00000000
+  Flags: 00000000
+  Reserved: 00000000
+
+Got 4096 bytes of file data:
+| 00000000 | 4D 5A 90 00 03 00 00 00 04 00 00 00 FF FF 00 00 B8 00 00 00 00 00 00 00 40 00 00 00 00 00 00 00 | MZ......................@....... |
+| 00000020 | 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 F0 00 00 00 | ................................ |
+| 00000040 | 0E 1F BA 0E 00 B4 09 CD 21 B8 01 4C CD 21 54 68 69 73 20 70 72 6F 67 72 61 6D 20 63 61 6E 6E 6F | ........!..L.!This program canno |
+| 00000060 | 74 20 62 65 20 72 75 6E 20 69 6E 20 44 4F 53 20 6D 6F 64 65 2E 0D 0D 0A 24 00 00 00 00 00 00 00 | t be run in DOS mode....$....... |
+| 00000080 | 4E 5F 00 FF 0A 3E 6E AC 0A 3E 6E AC 0A 3E 6E AC EE 4E 6D AD 09 3E 6E AC 78 BF 6D AD 0C 3E 6E AC | N_...&gt;n..&gt;n..&gt;n..Nm..&gt;n.x.m..&gt;n. |
+| 000000A0 | 7E BF 6A AD 0E 3E 6E AC 7E BF 6B AD 0B 3E 6E AC 7E BF 6D AD 05 3E 6E AC 7E BF 66 AD CB 3F 6E AC | ~.j..&gt;n.~.k..&gt;n.~.m..&gt;n.~.f..?n. |
+| 000000C0 | 7E BF 6E AD 0B 3E 6E AC 7E BF 91 AC 0B 3E 6E AC 7E BF 6C AD 0B 3E 6E AC 52 69 63 68 0A 3E 6E AC | ~.n..&gt;n.~....&gt;n.~.l..&gt;n.Rich.&gt;n. |
+| 000000E0 | 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 50 45 00 00 64 86 0C 00 67 E9 2F A8 00 00 00 00 | ................PE..d...g./..... |
+| 00000100 | 00 00 00 00 F0 00 22 00 0B 02 0E 26 00 40 0D 00 00 10 0F 00 00 10 00 00 E0 4C 0C 00 00 10 00 00 | ......&quot;....&amp;.@...........L...... |
+| 00000120 | 00 00 00 00 00 F8 FF FF 00 10 00 00 00 10 00 00 0A 00 00 00 0A 00 00 00 0A 00 00 00 00 00 00 00 | ................................ |
+| 00000140 | 00 70 1C 00 00 10 00 00 0A 7D 13 00 01 00 60 41 00 00 08 00 00 00 00 00 00 20 00 00 00 00 00 00 | .p.......}....`A......... ...... |
+| 00000160 | 00 00 10 00 00 00 00 00 00 10 00 00 00 00 00 00 00 00 00 00 10 00 00 00 10 04 11 00 8E 0C 00 00 | ................................ |
+| 00000180 | 00 00 00 00 00 00 00 00 00 40 1C 00 F8 03 00 00 00 30 1B 00 DC 8F 00 00 00 00 00 00 00 00 00 00 | .........@.......0.............. |
+...Data omitted...
+</div></code></pre>
+<p>From the dumped information, we can see that the following PE file is written into the Guest’s physical memory, starting at the Guest physical memory address <code>0x1A00000</code>. In fact, this PE file is the implementation of the VTL2 layer, which gets written into the virtual machine’s physical memory during the VM initialization stage.</p>
+<p>By extracting this PE file from the <code>13510</code> IGVM file, we obtain the following executable file: <code>vmhcl.exe</code></p>
+<p><img src="./8.png" alt="" title="vmhcl"></p>
+<p><code>vmhcl.exe</code> is the implementation of the VTL2 layer on the Windows platform. Moreover, Microsoft provides PDB downloads for <code>vmhcl.exe</code>, which reduces the complexity of reverse engineering. Functionally, <code>vmhcl.exe</code> is somewhat similar to <code>securekernel.exe</code>, as both provide functionality for higher VTL layers. The difference is that <code>securekernel.exe</code> serves the VTL1 layer, while <code>vmhcl.exe</code> serves the VTL2 layer.</p>
+<hr>
+<h2 id="4-vtl2-architecture-and-technical-details">4. VTL2 Architecture and Technical Details</h2>
+<p>Since it is VTL, everything inevitably revolves around the term virtualization. And once virtualization is mentioned, the starting point always goes back to the Windows Hypervisor layer.</p>
+<p>The hypervisor version used in this article is: <code>10.0.26100.4652</code></p>
+<p>The process of reverse engineering the hypervisor is omitted here. For the current version of the hypervisor, several key member offsets are as follows:</p>
+<pre class="hljs"><code><div>gs:360h ---- partition object
+
+gs:360h + 0x1B0 : partition privilege
+gs:360h + 0x1D0 : max vCPU amount
+gs:360h + 0x1D4 : max vCPU index
+gs:360h + 0x1E0 : virtual processor index 0
+gs:360h + 0x1E8 : virtual processor index 1
+...
+
+virtual process + 0x148 : VTL0
+virtual process + 0x150 : VTL1
+virtual process + 0x158 : VTL2
+
+VTL + 0x13E8 : VTL State
+
+VTL State + 0x180 : VMCA VA
+VTL State + 0x188 : VMCA PA
+</div></code></pre>
+<p>Next, we use debugging to observe the behavior of the virtual machine during the transition from VTL0 to VTL2, in order to better understand the practical purpose of the VTL2 level. First, the initial problem to solve is how to trigger code in VTL2 from within the virtual machine. It is known that the vTPM runs at the VTL2 level in <code>Trusted Launch</code> type virtual machines, so theoretically, performing TPM-related operations inside the VM should trigger the processing code at the VTL2 level.</p>
+<p>Therefore, in theory, running the <code>Get-Tpm</code> command inside the virtual machine can be used to trigger code in VTL2.</p>
+<p>Once we know how to trigger code in VTL2, the next step is to determine where the hypervisor performs the VTL level switch—specifically, the switch from VTL0 to VTL2. By setting breakpoints during the VTL switch, we can observe the memory state at different VTL levels.</p>
+<p>After some work, we identified the function responsible for switching VTLs through reverse engineering:</p>
+<pre class="hljs"><code><div>sub_FFFFF800002B0370 proc near
+
+                mov     [rsp+arg_8], rbx
+                mov     [rsp+arg_10], rbp
+                mov     [rsp+arg_18], rsi
+                push    rdi
+                sub     rsp, 20h
+                movzx   eax, r8b
+                mov     rbx, rdx
+                mov     rsi, rcx
+                mov     rbp, [rdx+rax*8+148h]   ;The rax is the VTL Layer number
+                mov     [rdx+404h], r8b
+                dec     r8b
+                mov     [rdx+3C0h], rbp
+                cmp     r8b, 1
+                ja      short loc_FFFFF800002B03B1
+                xor     al, al
+                jmp     short loc_FFFFF800002B03B7
+
+loc_FFFFF800002B03B1:                   
+                mov     al, [rdx+0DC0h]
+
+loc_FFFFF800002B03B7:                   
+                mov     [rdx+406h], al
+                lea     rdi, [rbp+13C0h]
+                mov     [rdx+1010h], rdi
+                mov     rdx, rdi
+                call    sub_FFFFF8000021C8D0    ；Finally, switch VTL level by this function
+...Code Omitted...
+</div></code></pre>
+<p>You can use a conditional breakpoint here to pause execution when the VTL level number is 2：</p>
+<pre class="hljs"><code><div>bp hv+02B038E&quot;.if (al == 2) {} .else{g;}&quot;
+</div></code></pre>
+<p>The following is the debugging process:</p>
+<pre class="hljs"><code><div>32: kd&gt; g
+hv+0x2b038e:
+fffff875`c5cb038e 488bacc248010000 mov     rbp,qword ptr [rdx+rax*8+148h]
+25: kd&gt; r rax
+rax=0000000000000002
+25: kd&gt; bd 1
+25: kd&gt; pc
+hv+0x2b03ce:
+fffff875`c5cb03ce e8fdc4f6ff      call    hv+0x21c8d0 (fffff875`c5c1c8d0)
+25: kd&gt; t
+hv+0x21c8d0:
+fffff875`c5c1c8d0 4053            push    rbx
+25: kd&gt; t
+hv+0x21c8d2:
+fffff875`c5c1c8d2 4883ec20        sub     rsp,20h
+25: kd&gt; t
+hv+0x21c8d6:
+fffff875`c5c1c8d6 488b4228        mov     rax,qword ptr [rdx+28h]
+25: kd&gt; t
+hv+0x21c8da:
+fffff875`c5c1c8da 488bd9          mov     rbx,rcx
+25: kd&gt; t
+hv+0x21c8dd:
+fffff875`c5c1c8dd 4c8bda          mov     r11,rdx
+25: kd&gt; t
+hv+0x21c8e0:
+fffff875`c5c1c8e0 c6802601000000  mov     byte ptr [rax+126h],0
+25: kd&gt; t
+hv+0x21c8e7:
+fffff875`c5c1c8e7 90              nop
+25: kd&gt; t
+hv+0x21c8e8:
+fffff875`c5c1c8e8 488b4a28        mov     rcx,qword ptr [rdx+28h]
+25: kd&gt; t
+hv+0x21c8ec:
+fffff875`c5c1c8ec 488b9180010000  mov     rdx,qword ptr [rcx+180h]
+25: kd&gt; t
+hv+0x21c8f3:
+fffff875`c5c1c8f3 4885d2          test    rdx,rdx
+25: kd&gt; t
+hv+0x21c8f6:
+fffff875`c5c1c8f6 0f84f2000000    je      hv+0x21c9ee (fffff875`c5c1c9ee)
+25: kd&gt; t
+hv+0x21c8fc:
+fffff875`c5c1c8fc 8b05ae27e9ff    mov     eax,dword ptr [hv+0xaf0b0 (fffff875`c5aaf0b0)]
+25: kd&gt; t
+hv+0x21c902:
+fffff875`c5c1c902 a801            test    al,1
+25: kd&gt; t
+hv+0x21c904:
+fffff875`c5c1c904 0f85b3000000    jne     hv+0x21c9bd (fffff875`c5c1c9bd)
+25: kd&gt; t
+hv+0x21c90a:
+fffff875`c5c1c90a 0fc7b188010000  vmptrld qword ptr [rcx+188h]
+25: kd&gt; !vmread 0x201a  //Guest VTL0 EPTP
+@$vmread(0x201a) : 0x2ac843e05e
+25: kd&gt; !vmread 0x6802  //Guest VTL0 CR3
+@$vmread(0x6802) : 0x7b5000
+25: kd&gt; !vmread 0x681c  //Guest VTL0 RSP
+@$vmread(0x681c) : 0xffffe10d5e6ef1f0
+25: kd&gt; !vmread 0x681e  //Guest VTL0 RIP
+@$vmread(0x681e) : 0xfffff8075704d84b   //This Pointer is the address in Guest:
+                                        //tpm!TpmTransportCommandResponse::CheckRequestPttLocalityZero+0xf: fffff807`5704d84b 0fb610          movzx   edx,byte ptr [rax]
+25: kd&gt; t
+hv+0x21c911:
+fffff875`c5c1c911 41f6435801      test    byte ptr [r11+58h],1
+25: kd&gt; !vmread 0x201a  //Guest VTL2 EPTP
+@$vmread(0x201a) : 0x2ac844205e
+25: kd&gt; !vmread 0x6802  //Guest VTL2 CR3
+@$vmread(0x6802) : 0x1c16000
+25: kd&gt; !vmread 0x681c  //Guest VTL2 RSP
+@$vmread(0x681c) : 0x1000023efb8
+25: kd&gt; !vmread 0x681e  //Guest VTL2 RIP
+@$vmread(0x681e) : 0x1000008d035
+25: kd&gt; !vtop 0x2ac844205e 0x1c16000
+Amd64VtoP: Virt 0000000001c16000, pagedir 0000002ac8442000
+Amd64VtoP: PML4E 0000002ac8442000
+Amd64VtoP: PDPE 0000002ac844a000
+Amd64VtoP: PDE 000000290d4ed070
+Amd64VtoP: PTE 00000023460020b0
+Amd64VtoP: Mapped phys 0000002947616000
+Virtual address 1c16000 translates to physical address 2947616000.
+25: kd&gt; dq /p 2947616000+8*2
+00000029`47616010  00000000`01c0e023 00000000`00000000
+00000029`47616020  00000000`00000000 00000000`00000000
+00000029`47616030  00000000`00000000 00000000`00000000
+00000029`47616040  00000000`00000000 00000000`00000000
+00000029`47616050  00000000`00000000 00000000`00000000
+00000029`47616060  00000000`00000000 00000000`00000000
+00000029`47616070  00000000`00000000 00000000`00000000
+00000029`47616080  00000000`00000000 00000000`00000000
+25: kd&gt; !vtop 0x2ac844205e 01c0e000
+Amd64VtoP: Virt 0000000001c0e000, pagedir 0000002ac8442000
+Amd64VtoP: PML4E 0000002ac8442000
+Amd64VtoP: PDPE 0000002ac844a000
+Amd64VtoP: PDE 000000290d4ed070
+Amd64VtoP: PTE 0000002346002070
+Amd64VtoP: Mapped phys 000000294760e000
+Virtual address 1c0e000 translates to physical address 294760e000.
+25: kd&gt; dq /p 294760e000 +8*0
+00000029`4760e000  00000000`01c0c023 00000000`00000000
+00000029`4760e010  00000000`00000000 00000000`00000000
+00000029`4760e020  00000000`00000000 00000000`00000000
+00000029`4760e030  00000000`00000000 00000000`00000000
+00000029`4760e040  00000000`00000000 00000000`00000000
+00000029`4760e050  00000000`00000000 00000000`00000000
+00000029`4760e060  00000000`00000000 00000000`00000000
+00000029`4760e070  00000000`00000000 00000000`00000000
+25: kd&gt; !vtop 0x2ac844205e 01c0c000
+Amd64VtoP: Virt 0000000001c0c000, pagedir 0000002ac8442000
+Amd64VtoP: PML4E 0000002ac8442000
+Amd64VtoP: PDPE 0000002ac844a000
+Amd64VtoP: PDE 000000290d4ed070
+Amd64VtoP: PTE 0000002346002060
+Amd64VtoP: Mapped phys 000000294760c000
+Virtual address 1c0c000 translates to physical address 294760c000.
+25: kd&gt; dq /p 294760c000+8*1
+00000029`4760c008  00000000`04b2b023 00000000`01df5023
+00000029`4760c018  00000000`00000000 00000000`00000000
+00000029`4760c028  00000000`00000000 00000000`00000000
+00000029`4760c038  00000000`00000000 00000000`00000000
+00000029`4760c048  00000000`00000000 00000000`00000000
+00000029`4760c058  00000000`00000000 00000000`00000000
+00000029`4760c068  00000000`00000000 00000000`00000000
+00000029`4760c078  00000000`00000000 00000000`00000000
+25: kd&gt; !vtop 0x2ac844205e 04b2b000
+Amd64VtoP: Virt 0000000004b2b000, pagedir 0000002ac8442000
+Amd64VtoP: PML4E 0000002ac8442000
+Amd64VtoP: PDPE 0000002ac844a000
+Amd64VtoP: PDE 000000290d4ed128
+Amd64VtoP: PTE 0000002346019958
+Amd64VtoP: Mapped phys 000000294cd2b000
+Virtual address 4b2b000 translates to physical address 294cd2b000.
+25: kd&gt; dq /p 294cd2b000+8*3e
+00000029`4cd2b1f0  80000000`04b5d063 00000000`00000000
+00000029`4cd2b200  00000000`00000000 80200000`04b4e503
+00000029`4cd2b210  80000000`04b4f103 00000000`00000000
+00000029`4cd2b220  80100000`04b50163 00000000`00000000
+00000029`4cd2b230  00000000`00000000 00000000`00000000
+00000029`4cd2b240  00000000`00000000 00000000`00000000
+00000029`4cd2b250  00000000`00000000 00000000`00000000
+00000029`4cd2b260  00000000`00000000 00000000`00000000
+25: kd&gt; !vtop 0x2ac844205e 04b5d000
+Amd64VtoP: Virt 0000000004b5d000, pagedir 0000002ac8442000
+Amd64VtoP: PML4E 0000002ac8442000
+Amd64VtoP: PDPE 0000002ac844a000
+Amd64VtoP: PDE 000000290d4ed128
+Amd64VtoP: PTE 0000002346019ae8
+Amd64VtoP: Mapped phys 000000294cd5d000
+Virtual address 4b5d000 translates to physical address 294cd5d000.
+25: kd&gt; dq /p 294cd5d000+fb8
+00000029`4cd5dfb8  fffff800`000c504f 00000000`00000000  //The return address at the top of the RSP stack after address translation
+00000029`4cd5dfc8  00000000`00000000 00000000`00000000
+00000029`4cd5dfd8  00000000`00000000 00000000`00000000
+00000029`4cd5dfe8  00000000`00000000 00000000`00000000
+00000029`4cd5dff8  00000000`00000000 00000100`0024e000
+00000029`4cd5e008  0000000f`0000000e 00000000`00000007
+00000029`4cd5e018  00000000`00000000 00000001`00000000
+00000029`4cd5e028  00000100`00267000 00000100`0024e014
+</div></code></pre>
+<p>From the above debugging process, it can be observed that when the virtual machine kernel code executes up to <code>tpm!TpmTransportCommandResponse::CheckRequestPttLocalityZero+0xf</code>, since the address to be read is an MMIO address mapped via map, this triggers a <code>VM-Exit</code> and control is handed over to the hypervisor for handling.</p>
+<p>Subsequently, the hypervisor performs a VTL switch. That is, in the debugging process above, at <code>vmptrld qword ptr [rcx+188h]</code>, VTL0 is switched to VTL2. After switching to VTL2, by reading the VMCS fields, it is found that the RSP register value of VTL2 at this point is <code>0x1000023efb8</code>. Here, the RSP points to the top of the stack of the thread currently running the VP in VTL2, and this location holds the function’s return address.</p>
+<p>After a series of address translations, the VTL2 address <code>0x1000023efb8</code> is converted to the physical address in the Host: <code>0x294cd5dfb8</code>. After reading it with a debugger, the return address is found to be: <code>0xfffff800000c504f</code>.</p>
+<p>Opening vmhcl.exe in IDA, let’s examine the contents at <code>0xfffff800000c504f</code>:</p>
+<p><img src="./9.png" alt="" title="return address"></p>
+<p>Judging from the function name, it is essentially the main loop function of the VTL2 kernel thread. When the VTL switches to VTL2, the code in VTL2 starts executing from the instruction immediately after <code>DmVtlReturnAddress</code>, handling VTL0-level requests to read from MMIO addresses.</p>
+<p>According to the information in the IGVM file, the <code>vmhcl.exe</code> file will be written into the Guest physical memory at <code>0x1a00000</code>. This GPA location is fixed, and the base address of the virtual address mapped in VTL2 is <code>0xFFFFF80000000000</code>. The debugging process also confirms this.</p>
+<pre class="hljs"><code><div>//Here! Switch to the VTL layer number 2.
+16: kd&gt; !vmread 0x201a
+@$vmread(0x201a) : 0x1355e4205e
+16: kd&gt; !vmread 0x6802
+@$vmread(0x6802) : 0x1c16000
+16: kd&gt; !vmread 0x681c
+@$vmread(0x681c) : 0x100002a2fb8
+16: kd&gt; !vmread 0x681e
+@$vmread(0x681e) : 0x1000008d035
+16: kd&gt; !vtop 0x1355e4205e 0x1c16000
+Amd64VtoP: Virt 0000000001c16000, pagedir 0000001355e42000
+Amd64VtoP: PML4E 0000001355e42000
+Amd64VtoP: PDPE 0000001355e4a000
+Amd64VtoP: PDE 00000012eb4ed070
+Amd64VtoP: PTE 000000150f2020b0
+Amd64VtoP: Mapped phys 0000001506616000
+Virtual address 1c16000 translates to physical address 1506616000.
+16: kd&gt; dq /p 1506616000+8*1f0
+00000015`06616f80  00000000`01c0d023 00000000`00000000
+00000015`06616f90  00000000`00000000 00000000`00000000
+00000015`06616fa0  00000000`00000000 00000000`00000000
+00000015`06616fb0  00000000`00000000 00000000`00000000
+00000015`06616fc0  00000000`00000000 00000000`00000000
+00000015`06616fd0  00000000`00000000 00000000`00000000
+00000015`06616fe0  00000000`00000000 00000000`00000000
+00000015`06616ff0  00000000`00000000 00000000`00000000
+16: kd&gt; !vtop 0x1355e4205e 01c0d000
+Amd64VtoP: Virt 0000000001c0d000, pagedir 0000001355e42000
+Amd64VtoP: PML4E 0000001355e42000
+Amd64VtoP: PDPE 0000001355e4a000
+Amd64VtoP: PDE 00000012eb4ed070
+Amd64VtoP: PTE 000000150f202068
+Amd64VtoP: Mapped phys 000000150660d000
+Virtual address 1c0d000 translates to physical address 150660d000.
+16: kd&gt; dq /p 150660d000+8*0
+00000015`0660d000  00000000`01c11023 00000000`00000000
+00000015`0660d010  00000000`00000000 00000000`00000000
+00000015`0660d020  00000000`00000000 00000000`00000000
+00000015`0660d030  00000000`00000000 00000000`00000000
+00000015`0660d040  00000000`00000000 00000000`00000000
+00000015`0660d050  00000000`00000000 00000000`00000000
+00000015`0660d060  00000000`00000000 00000000`00000000
+00000015`0660d070  00000000`00000000 00000000`00000000
+16: kd&gt; !vtop 0x1355e4205e 01c11000
+Amd64VtoP: Virt 0000000001c11000, pagedir 0000001355e42000
+Amd64VtoP: PML4E 0000001355e42000
+Amd64VtoP: PDPE 0000001355e4a000
+Amd64VtoP: PDE 00000012eb4ed070
+Amd64VtoP: PTE 000000150f202088
+Amd64VtoP: Mapped phys 0000001506611000
+Virtual address 1c11000 translates to physical address 1506611000.
+16: kd&gt; dq /p 1506611000+8*0
+00000015`06611000  00000000`01c10023 00000000`00000000
+00000015`06611010  00000000`00000000 00000000`00000000
+00000015`06611020  00000000`00000000 00000000`00000000
+00000015`06611030  00000000`00000000 00000000`00000000
+00000015`06611040  00000000`00000000 00000000`00000000
+00000015`06611050  00000000`00000000 00000000`00000000
+00000015`06611060  00000000`00000000 00000000`00000000
+00000015`06611070  00000000`00000000 00000000`00000000
+16: kd&gt; !vtop 0x1355e4205e 01c10000
+Amd64VtoP: Virt 0000000001c10000, pagedir 0000001355e42000
+Amd64VtoP: PML4E 0000001355e42000
+Amd64VtoP: PDPE 0000001355e4a000
+Amd64VtoP: PDE 00000012eb4ed070
+Amd64VtoP: PTE 000000150f202080
+Amd64VtoP: Mapped phys 0000001506610000
+Virtual address 1c10000 translates to physical address 1506610000.
+16: kd&gt; dq /p 1506610000+8*0
+00000015`06610000  80000000`01a00101 00000000`01a01101
+00000015`06610010  00000000`01a02101 00000000`01a03101
+00000015`06610020  00000000`01a04101 00000000`01a05101
+00000015`06610030  00000000`01a06101 00000000`01a07101
+00000015`06610040  00000000`01a08101 00000000`01a09101
+00000015`06610050  00000000`01a0a121 00000000`01a0b101
+00000015`06610060  00000000`01a0c101 00000000`01a0d121
+00000015`06610070  00000000`01a0e101 00000000`01a0f101
+16: kd&gt; !vtop 0x1355e4205e 01a00000
+Amd64VtoP: Virt 0000000001a00000, pagedir 0000001355e42000
+Amd64VtoP: PML4E 0000001355e42000
+Amd64VtoP: PDPE 0000001355e4a000
+Amd64VtoP: PDE 00000012eb4ed068
+Amd64VtoP: PTE 000000150f201000
+Amd64VtoP: Mapped phys 0000001506400000
+Virtual address 1a00000 translates to physical address 1506400000.
+16: kd&gt; db /p 1506400000
+00000015`06400000  4d 5a 90 00 03 00 00 00-04 00 00 00 ff ff 00 00  MZ..............
+00000015`06400010  b8 00 00 00 00 00 00 00-40 00 00 00 00 00 00 00  ........@.......
+00000015`06400020  00 00 00 00 00 00 00 00-00 00 00 00 00 00 00 00  ................
+00000015`06400030  00 00 00 00 00 00 00 00-00 00 00 00 f0 00 00 00  ................
+00000015`06400040  0e 1f ba 0e 00 b4 09 cd-21 b8 01 4c cd 21 54 68  ........!..L.!Th
+00000015`06400050  69 73 20 70 72 6f 67 72-61 6d 20 63 61 6e 6e 6f  is program canno
+00000015`06400060  74 20 62 65 20 72 75 6e-20 69 6e 20 44 4f 53 20  t be run in DOS 
+00000015`06400070  6d 6f 64 65 2e 0d 0d 0a-24 00 00 00 00 00 00 00  mode....$.......
+//Here is the program header of the file vmhcl.exe.
+</div></code></pre>
+<p>To summarize, the architecture of VTL2 is as follows.</p>
+<p><img src="./10.png" alt="" title="architecture"></p>
+<hr>
+<h2 id="5-debugging-process">5. Debugging Process</h2>
+<p>Through reverse engineering of <code>vmhcl.exe</code>, it was found that <code>vmhcl.exe</code> provides a debug functionality. By modifying the debug parameters, one can choose to use serial or network debugging. In theory, it is possible to debug <code>vmhcl.exe</code> in a manner similar to debugging the Windows kernel.</p>
+<pre class="hljs"><code><div>void *__fastcall DmEarlyInitializeBootProcessor(__int64 a1, _QWORD *a2)
+{
+  _UNKNOWN **v3; // rbx
+  void *result; // rax
+
+  v3 = KepCpuArray;
+  if ( !*(_DWORD *)DmConfigLoaderBlock )
+  {
+    KeRaiseSystemError(5, 0, 0, 0, 0LL);
+    JUMPOUT(0xFFFFF80000009A7BuLL);
+  }
+  KdDebugParameters = 0;
+  KdDebuggingConfigured = 0;
+  if ( (MEMORY[0xFFFFF80004111048] &amp; 1) != 0 )
+  {
+    KdpParseCommandLine(0xFFFFF80004001000uLL, &amp;KdDebugParameters);
+    if ( KdDebugParameters )
+      KdDebuggingConfigured = 1;
+  }
+  KeInitializeSystemPhase0(v3);
+  KeInitializeProcessorPhase0(v3, a1);
+  MmInitializeSystemPhase0();
+  HvlInitializeSystemPhase0();
+  __writemsr(0x40000000u, 0x10A0101640064uLL);
+  HalInitializeSystem(0x40000000LL, 68097LL);
+  HalpInitLocalApicForCpu(*((unsigned int *)v3 + 2));
+  _bittestandset64(&amp;KepActiveProcessorSet[(unsigned __int64)*((unsigned int *)v3 + 2) &gt;&gt; 6], (_DWORD)v3[1] &amp; 0x3F);
+  _InterlockedIncrement(&amp;KepActiveProcessorCount);
+  if ( (unsigned int)KepMaximumActiveCpuNumber &lt;= *((_DWORD *)v3 + 2) )
+    KepMaximumActiveCpuNumber = *((_DWORD *)v3 + 2);
+  *((_DWORD *)v3 + 104) = 1;
+  KeAllocateProcessorStack(v3);
+  result = v3[53];
+  *a2 = result;
+  return result;
+}
+</div></code></pre>
+<p>However, although <code>vmhcl.exe</code> provides full debugging capabilities from Microsoft, after investigation, modifying the debug parameters for serial or network debugging cannot successfully enable debugging for <code>vmhcl.exe</code>. This is because enabling <code>vmhcl.exe</code> debugging requires support from certain hypervisor parameters that ordinary users cannot access through standard methods, and Microsoft has not released official documentation for <code>vmhcl.exe</code>/<code>VTL2</code>. It seems that using the debugging functionality within <code>vmhcl.exe</code> to debug VTL2 is not currently feasible.</p>
+<p>So, besides using a hardware debugger or an IDA + VMware dual-machine debugging setup to debug <code>vmhcl.exe</code>, are there any other approaches to easily debug <code>vmhcl.exe</code>?</p>
+<p>Here, the <code>0xee</code> injection debugging method will be introduced. Although this method cannot achieve single-step tracing like dual-machine debugging, it is still possible to set breakpoints in <code>vmhcl.exe</code> and inspect memory and register states.</p>
+<p>First, the principle behind <code>0xee</code> injection needs to be explained:</p>
+<p>As is well known, a debugger sets a breakpoint at a specific location by inserting <code>0xcc</code> into the target position. When the program executes the <code>0xcc</code> and is intercepted by the debugger, the debugger restores the original instruction at that location. At this point, the breakpoint is triggered, waiting for user input.</p>
+<p>Although it is not possible to insert <code>0xcc</code> into VTL2 to implement breakpoints, this idea of inserting a breakpoint can still be borrowed. Two issues need to be solved:</p>
+<p>Find an instruction as short as possible (to facilitate restoring after the breakpoint is triggered) that can trigger a <code>VM-Exit</code> event, pausing the virtual machine and letting the hypervisor handle it.</p>
+<p>Be able to locate this triggered event within the hypervisor.</p>
+<p>After searching, one instruction that meets these two conditions is <code>0xee</code>.</p>
+<p>In x64 assembly, <code>0xee</code> means: <code>out dx, al</code>, which writes the data from the <code>al</code> register to the port stored in the <code>dx</code> register. Performing I/O port read/write operations in a virtual machine directly triggers a <code>VM-Exit</code> event, pausing the VM and trapping into the hypervisor for handling. This is ideal because the Windows platform allows debugging of the hypervisor. Moreover, the data written via the <code>al</code> register can be set as a magic number, such as <code>0xdead</code>, making it convenient to locate this event during hypervisor debugging.</p>
+<p>Thus, the complete breakpoint instruction is:</p>
+<pre class="hljs"><code><div>0:  66 b8 ad de             mov    ax,0xdead
+4:  ee                      out    dx,al 
+</div></code></pre>
+<p>Although it looks quite bloated, at least as a temporary debugging solution, it is still acceptable.</p>
+<p>Next, we will use this method to debug the VTL2 layer’s <code>vmhcl.exe</code> as a test. A breakpoint will be set at the <code>vmhcl!VTpmExecuteCommand</code> function to examine the stack trace of the VTL2 context.</p>
+<p>First, we need to locate the Host physical address of the <code>vmhcl!VTpmExecuteCommand</code> function. According to the disassembly of <code>vmhcl!VTpmExecuteCommand</code>, the virtual address of the function is <code>0xFFFFF8000008200C</code>. As mentioned in the previous section, <code>vmhcl.exe</code> is mapped to the Guest physical address starting at <code>0x1a00000</code>. Therefore, the physical address of the <code>vmhcl!VTpmExecuteCommand</code> function in the Guest is <code>0x1a8200c</code>.</p>
+<pre class="hljs"><code><div>2: kd&gt; !vtop 0x1355e4205e 01a8200c
+Amd64VtoP: Virt 0000000001a8200c, pagedir 0000001355e42000
+Amd64VtoP: PML4E 0000001355e42000
+Amd64VtoP: PDPE 0000001355e4a000
+Amd64VtoP: PDE 00000012eb4ed068
+Amd64VtoP: PTE 000000150f201410
+Amd64VtoP: Mapped phys 000000150648200c
+Virtual address 1a8200c translates to physical address 150648200c.
+2: kd&gt; db /p 150648200c
+00000015`0648200c  40 55 53 56 57 41 56 41-57 48 8b ec 48 83 ec 48  @USVWAVAWH..H..H
+00000015`0648201c  48 8b 05 8d 71 09 00 48-33 c4 48 89 45 f0 49 8b  H...q..H3.H.E.I.
+00000015`0648202c  f9 49 8b f0 44 8b f1 48-85 d2 0f 84 54 01 00 00  .I..D..H....T...
+00000015`0648203c  4d 85 c9 0f 84 4b 01 00-00 83 f9 0a 0f 82 42 01  M....K........B.
+00000015`0648204c  00 00 83 3d d3 63 0a 00-00 75 0a b8 ff ff 00 80  ...=.c...u......
+00000015`0648205c  e9 34 01 00 00 bb 00 10-00 00 48 8d 0d 33 b9 0a  .4........H..3..
+00000015`0648206c  00 44 8b c3 44 3b f3 45-0f 46 c6 e8 44 f3 04 00  .D..D;.E.F..D...
+00000015`0648207c  8b 0d aa 63 0a 00 41 bf-08 00 00 00 85 c9 75 18  ...c..A.......u.
+</div></code></pre>
+<p>After debugging, the physical address of the <code>vmhcl!VTpmExecuteCommand</code> function in the Host is: <code>0x150648200c</code>. Later, we will insert a breakpoint instruction at this physical address.</p>
+<p>However, before inserting the breakpoint instruction, we need to set a conditional breakpoint at the hypervisor function that handles the <code>out dx, al</code> instruction, as follows:</p>
+<pre class="hljs"><code><div>bp hv+2C3D78&quot;.if(@dx==0xdead) {} .else {g;}&quot;
+//hv+2C3D78 is the hypervisor function used to handle the out dx, al instruction. Its second parameter, dx, corresponds to the value in the AL register in the virtual machine.
+</div></code></pre>
+<p>Next, we insert the breakpoint instruction at the beginning of the <code>vmhcl!VTpmExecuteCommand</code>  function:</p>
+<pre class="hljs"><code><div>!ed 150648200c 0xdeadb866;!eb 150648200c+4 0xee
+</div></code></pre>
+<p>Now you can run the <code>Get-Tpm</code> command in the virtual machine to trigger VTL2 to execute the <code>vmhcl!VTpmExecuteCommand</code> function, and the breakpoint will be successfully hit.</p>
+<pre class="hljs"><code><div>2: kd&gt; g
+hv+0x2c3d78:
+fffff813`95ac3d78 48895c2410      mov     qword ptr [rsp+10h],rbx
+8: kd&gt; r rdx
+rdx=000000000000dead
+8: kd&gt; !ed 150648200c 0x56535540;!eb 150648200c+4 0x57  //Restore the original vmhcl!VTpmExecuteCommand function.
+8: kd&gt; db /p 150648200c
+00000015`0648200c  40 55 53 56 57 41 56 41-57 48 8b ec 48 83 ec 48  @USVWAVAWH..H..H
+00000015`0648201c  48 8b 05 8d 71 09 00 48-33 c4 48 89 45 f0 49 8b  H...q..H3.H.E.I.
+00000015`0648202c  f9 49 8b f0 44 8b f1 48-85 d2 0f 84 54 01 00 00  .I..D..H....T...
+00000015`0648203c  4d 85 c9 0f 84 4b 01 00-00 83 f9 0a 0f 82 42 01  M....K........B.
+00000015`0648204c  00 00 83 3d d3 63 0a 00-00 75 0a b8 ff ff 00 80  ...=.c...u......
+00000015`0648205c  e9 34 01 00 00 bb 00 10-00 00 48 8d 0d 33 b9 0a  .4........H..3..
+00000015`0648206c  00 44 8b c3 44 3b f3 45-0f 46 c6 e8 44 f3 04 00  .D..D;.E.F..D...
+00000015`0648207c  8b 0d aa 63 0a 00 41 bf-08 00 00 00 85 c9 75 18  ...c..A.......u.
+8: kd&gt; !vmread 0x681c
+@$vmread(0x681c) : 0x100002a27f8
+8: kd&gt; !vmread 0x201a
+@$vmread(0x201a) : 0x1355e4205e
+8: kd&gt; !gva2hpa 0x100002a27f8
+0x0000001355e42000 EPT Pointer
+0x0000000004bb7000 Guest CR3
+0x00000015095b7000 Guest CR3 HPA
+0x0000000000000000 Guest PLM4 GPA
+0x0000001379c00000 Guest PDPE HPA
+0x0000000000000000 Guest PDPE GPA
+0x0000001379c00000 Guest PDPE HPA
+0x0000000000000000 Guest PDE GPA
+0x0000001379c00000 Guest PDE HPA
+0x0000000000000000 Guest PTE GPA
+0x0000001379c00000 Guest PDE HPA
+0x0000001379c007f8 Guest HPA
+@$gva2hpa(0x100002a27f8)
+8: kd&gt; !vmread 0x6802
+@$vmread(0x6802) : 0x4bb7000
+8: kd&gt; !vtop 0x1355e4205e 0x4bb7000
+Amd64VtoP: Virt 0000000004bb7000, pagedir 0000001355e42000
+Amd64VtoP: PML4E 0000001355e42000
+Amd64VtoP: PDPE 0000001355e4a000
+Amd64VtoP: PDE 00000012eb4ed128
+Amd64VtoP: PTE 000000150f219db8
+Amd64VtoP: Mapped phys 00000015095b7000
+Virtual address 4bb7000 translates to physical address 15095b7000.
+8: kd&gt; dq /p 15095b7000+8*2
+00000015`095b7010  00000000`01c1a063 00000000`00000000
+00000015`095b7020  00000000`00000000 00000000`00000000
+00000015`095b7030  00000000`00000000 00000000`00000000
+00000015`095b7040  00000000`00000000 00000000`00000000
+00000015`095b7050  00000000`00000000 00000000`00000000
+00000015`095b7060  00000000`00000000 00000000`00000000
+00000015`095b7070  00000000`00000000 00000000`00000000
+00000015`095b7080  00000000`00000000 00000000`00000000
+8: kd&gt; !vtop 0x1355e4205e 01c1a000
+Amd64VtoP: Virt 0000000001c1a000, pagedir 0000001355e42000
+Amd64VtoP: PML4E 0000001355e42000
+Amd64VtoP: PDPE 0000001355e4a000
+Amd64VtoP: PDE 00000012eb4ed070
+Amd64VtoP: PTE 000000150f2020d0
+Amd64VtoP: Mapped phys 000000150661a000
+Virtual address 1c1a000 translates to physical address 150661a000.
+8: kd&gt; dq /p 150661a000+8*0
+00000015`0661a000  00000000`01c1b063 00000000`01c1c063
+00000015`0661a010  00000000`01c1d063 00000000`01c1e063
+00000015`0661a020  00000000`01c1f063 00000000`01c20063
+00000015`0661a030  00000000`01c21063 00000000`01c22063
+00000015`0661a040  00000000`01c23063 00000000`01c24063
+00000015`0661a050  00000000`01c25063 00000000`01c26063
+00000015`0661a060  00000000`01c27063 00000000`01c28063
+00000015`0661a070  00000000`01c29063 00000000`01c2a063
+8: kd&gt; !vtop 0x1355e4205e 01c1b000
+Amd64VtoP: Virt 0000000001c1b000, pagedir 0000001355e42000
+Amd64VtoP: PML4E 0000001355e42000
+Amd64VtoP: PDPE 0000001355e4a000
+Amd64VtoP: PDE 00000012eb4ed070
+Amd64VtoP: PTE 000000150f2020d8
+Amd64VtoP: Mapped phys 000000150661b000
+Virtual address 1c1b000 translates to physical address 150661b000.
+8: kd&gt; dq /p 150661b000+8*1
+00000015`0661b008  00000000`04b10063 00000000`01de4063
+00000015`0661b018  00000000`00000000 00000000`00000000
+00000015`0661b028  00000000`00000000 00000000`00000000
+00000015`0661b038  00000000`00000000 00000000`00000000
+00000015`0661b048  00000000`00000000 00000000`00000000
+00000015`0661b058  00000000`00000000 00000000`00000000
+00000015`0661b068  00000000`00000000 00000000`00000000
+00000015`0661b078  00000000`00000000 00000000`00000000
+8: kd&gt; !vtop 0x1355e4205e 04b10000
+Amd64VtoP: Virt 0000000004b10000, pagedir 0000001355e42000
+Amd64VtoP: PML4E 0000001355e42000
+Amd64VtoP: PDPE 0000001355e4a000
+Amd64VtoP: PDE 00000012eb4ed128
+Amd64VtoP: PTE 000000150f219880
+Amd64VtoP: Mapped phys 0000001509510000
+Virtual address 4b10000 translates to physical address 1509510000.
+8: kd&gt; dq /p 1509510000+8*a2
+00000015`09510510  80000000`04bb1163 00000000`00000400
+00000015`09510520  00000000`00000400 80200000`04bb2563
+00000015`09510530  80000000`04bb3163 00000000`00000400
+00000015`09510540  80100000`04bb4163 80100000`04bb5163
+00000015`09510550  80100000`04bb6163 80100000`04bbb163
+00000015`09510560  80100000`04bbc163 80100000`04bbd163
+00000015`09510570  80100000`04bbe163 80200000`04bbf163
+00000015`09510580  80000000`04bc0163 80100000`04bc1163
+8: kd&gt; !vtop 0x1355e4205e 04bb1000
+Amd64VtoP: Virt 0000000004bb1000, pagedir 0000001355e42000
+Amd64VtoP: PML4E 0000001355e42000
+Amd64VtoP: PDPE 0000001355e4a000
+Amd64VtoP: PDE 00000012eb4ed128
+Amd64VtoP: PTE 000000150f219d88
+Amd64VtoP: Mapped phys 00000015095b1000
+Virtual address 4bb1000 translates to physical address 15095b1000.
+8: kd&gt; dq /p 15095b1000+7f8 L?100   //Here is the top of the stack in VTL2; RSP
+00000015`095b17f8  fffff800`0005a872 00000100`0013a000  //VmEmu::HCL::VTpmServices::ExecuteTpmCommandInternal(gsl::span&lt;gsl::byte const,-1&gt;,gsl::span&lt;gsl::byte,-1&gt;)+4E
+00000015`095b1808  00000000`00001000 00000000`00000000
+00000015`095b1818  00000000`00000000 00000000`fed40001
+00000015`095b1828  fffff800`000088c1 00000000`000000fa
+00000015`095b1838  00000100`0013a038 00000000`000000fa
+00000015`095b1848  00000100`0013a004 00000100`002a2960
+...Omit some debugging information; those interested can try it out themselves...
+8: kd&gt; !vmread 0x681e
+@$vmread(0x681e) : 0xfffff80000082010
+8: kd&gt; !vmwrite 0x681e, 0xfffff8000008200b
+@$vmwrite(0x681e, 0xfffff8000008200b) : 0x681e
+8: kd&gt; !vmread 0x681e
+@$vmread(0x681e) : 0xfffff8000008200b
+//Here, the Guest RIP is rolled back to the beginning of the vmhcl!VTpmExecuteCommand function.
+</div></code></pre>
+<p>Finally, set the Guest RIP back to the start of the <code>vmhcl!VTpmExecuteCommand</code> function so that the hypervisor can continue running and the debugging session ends.</p>
+<hr>
+<h2 id="6-summary">6. Summary</h2>
+<p>During the initial VTL2 research phase, based on the description in Microsoft’s VSM documentation, either VTL1 cannot access VTL2’s data, or it cannot modify it. This initially led to the assumption that the VTL2 layer has higher privileges than VTL1. The VTL1 model was mapped to securekernel.exe in the host, while the VTL2 model was mapped to vmhcl.exe in the virtual machine. This assumption misled me into thinking that VTL2 in the virtual machine has higher privileges than VTL1 in the host. However, in reality, the VTL2 layer is never implemented in the host, making such a comparison meaningless.</p>
+<p>In fact, the purpose of VTL2 is to isolate virtual devices, such as vTPM, running in the virtual machine environment. It ensures that while virtual devices operate within the VM, the VM’s operating system cannot modify or access sensitive data. This reduces the host’s attack surface while maintaining a trusted computing environment within the VM. Therefore, assuming a Windows-based VM, the privilege hierarchy within the virtual machine environment is:</p>
+<p>VTL2 (vmhcl.exe) &gt; VTL1 (securekernel.exe in the VM) &gt; VTL0 (ntoskrnl.exe in the VM).</p>
+<p>Debugging VTL2 feels like “dancing with shackles”—perhaps we can only hope that Microsoft will eventually release VTL2 documentation to the public. Nevertheless, for those researching Windows virtualization, this still serves as a temporary solution.</p>
+<hr>
+<h2 id="7-references">7. References</h2>
+<ol>
+<li>https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/tlfs/vsm#virtual-trust-level-vtl</li>
+<li>https://research.qianxin.com/archives/2556</li>
+<li>https://github.com/microsoft/igvm</li>
+<li>https://github.com/microsoft/openvmm</li>
+<li>https://techcommunity.microsoft.com/blog/windowsosplatform/openhcl-the-new-open-source-paravisor/4273172</li>
+<li>https://docs.rs/igvm_defs/0.3.4/igvm_defs/index.html</li>
+</ol>
+
+</body>
+</html>
